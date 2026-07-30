@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "AdsOnBread vanilla example",
+  "version": "1.0.0",
+  "description": "Minimal Manifest V3 extension showing an AdsOnBread banner in a popup.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AdsOnBread example"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; connect-src https://edge.adsonbread.com"
+  }
+}

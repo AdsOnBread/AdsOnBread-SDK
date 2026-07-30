@@ -1,0 +1,8 @@
+node_modules
+package-lock.json
+*.tgz
+*.log
+.DS_Store
+
+# Produced by `npm run example:vanilla` — never commit a second copy of the SDK.
+examples/vanilla-extension/vendor/

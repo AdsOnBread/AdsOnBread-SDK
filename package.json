@@ -1,0 +1,54 @@
+{
+  "name": "@adsonbread/react",
+  "version": "1.0.0",
+  "description": "AdsOnBread SDK for browser extensions — vanilla JS and React ad slots.",
+  "license": "MIT",
+  "homepage": "https://adsonbread.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AdsOnBread/AdsOnBread-SDK/issues"
+  },
+  "keywords": [
+    "adsonbread",
+    "advertising",
+    "ads",
+    "browser-extension",
+    "chrome-extension",
+    "manifest-v3",
+    "react",
+    "sdk"
+  ],
+  "type": "module",
+  "main": "./react.js",
+  "module": "./react.js",
+  "types": "./react.d.ts",
+  "exports": {
+    ".": {
+      "types": "./react.d.ts",
+      "import": "./react.js"
+    },
+    "./vanilla": "./sdk.js",
+    "./test": "./test-sdk.js"
+  },
+  "files": [
+    "sdk.js",
+    "test-sdk.js",
+    "react.js",
+    "react.d.ts",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "check": "node --check sdk.js && node --check test-sdk.js && node --check react.js",
+    "test": "node --test test/*.test.mjs",
+    "example:vanilla": "mkdir -p examples/vanilla-extension/vendor && cp sdk.js examples/vanilla-extension/vendor/adsonbread-sdk.js && cp test-sdk.js examples/vanilla-extension/vendor/adsonbread-test-sdk.js"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

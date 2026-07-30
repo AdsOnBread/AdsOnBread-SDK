@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 22 still bundles
+      # npm 10.x, so upgrade explicitly rather than relying on the bundled one.
+      - name: Use an npm that supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm -v
+
+      - name: Assert the tag matches package.json
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version ($expected)."
+            echo "Bump package.json and the VERSION literals, or retag."
+            exit 1
+          fi
+          echo "Tag $GITHUB_REF_NAME matches package.json."
+
+      - name: Syntax check
+        run: npm run check
+
+      - name: Install react for the React smoke test
+        run: npm install --no-save react
+
+      - name: Smoke tests
+        run: npm test
+
+      # Publishers already have these filenames on disk from the old
+      # adsonbread.com/sdk/*.js downloads — keep them stable so a re-vendor is
+      # a drop-in replacement.
+      - name: Stage release assets under their published names
+        run: |
+          mkdir -p release
+          cp sdk.js release/adsonbread-sdk.js
+          cp test-sdk.js release/adsonbread-test-sdk.js
+          cp react.js release/adsonbread-react.js
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            release/adsonbread-sdk.js \
+            release/adsonbread-test-sdk.js \
+            release/adsonbread-react.js
+
+      # No NPM_TOKEN: this publishes via trusted publishing (OIDC), using a
+      # short-lived token minted for this workflow that cannot be extracted or
+      # reused. Requires a trusted publisher configured for the package on
+      # npmjs.com pointing at this repo + workflow filename. Provenance is
+      # generated automatically (public repo, public package), so --provenance
+      # is not needed.
+      - name: Publish to npm
+        run: npm publish --access public

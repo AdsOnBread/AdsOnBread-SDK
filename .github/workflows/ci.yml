@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Syntax check
+        run: npm run check
+
+      # react is a peer dependency, deliberately not a devDependency: the
+      # package must stay install-script-free so `npm install github:...`
+      # never has anything to build.
+      - name: Install react for the React smoke test
+        run: npm install --no-save react
+
+      - name: Smoke tests
+        run: npm test
+
+      # Regression test for the "files" field. Every publisher installing from
+      # git gets exactly this file list, so an accidental edit here silently
+      # breaks installs. Fail loudly instead.
+      - name: Assert the package ships every file publishers install
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e '
+            const [{ files }] = require("./pack.json")
+            const shipped = files.map((f) => f.path)
+            const required = ["sdk.js", "test-sdk.js", "react.js", "react.d.ts"]
+            const missing = required.filter((f) => !shipped.includes(f))
+            if (missing.length) {
+              console.error("Missing from the package tarball:", missing.join(", "))
+              console.error("Shipped:", shipped.join(", "))
+              process.exit(1)
+            }
+            console.log("Tarball contains all required files:", shipped.join(", "))
+          '

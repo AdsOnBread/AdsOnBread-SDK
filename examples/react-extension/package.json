@@ -1,0 +1,11 @@
+{
+  "name": "adsonbread-react-example",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal React example for the AdsOnBread SDK.",
+  "type": "module",
+  "dependencies": {
+    "@adsonbread/react": "^1.0.0",
+    "react": "^19.0.0"
+  }
+}

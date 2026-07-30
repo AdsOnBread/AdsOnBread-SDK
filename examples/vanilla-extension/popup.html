@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AdsOnBread example</title>
+    <style>
+      body {
+        font: 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 16px;
+        width: 360px;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Your extension UI</h1>
+
+    <!-- The ad slot. One ad at a time per page. -->
+    <div id="ad-slot"></div>
+
+    <!-- Vendored, not remote: Manifest V3 forbids loading remote scripts. -->
+    <script src="./vendor/adsonbread-test-sdk.js"></script>
+    <script src="./vendor/adsonbread-sdk.js"></script>
+    <script src="./popup.js"></script>
+  </body>
+</html>
