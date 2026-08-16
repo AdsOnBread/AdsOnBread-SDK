@@ -106,7 +106,7 @@
   }
 
   const AdsOnBreadTest = {
-    version: '1.0.0',
+    version: '1.1.0',
 
     load(apiKey, placement, container, options) {
       const target = normalizeContainer(container)

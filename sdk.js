@@ -1,7 +1,7 @@
 ;(function (window) {
   'use strict'
 
-  const VERSION = '1.0.0'
+  const VERSION = '1.1.0'
   const defaultEdgeUrl = 'https://edge.adsonbread.com'
   const themes = {
     dark: {
@@ -34,9 +34,11 @@
   }
 
   const uidStorageKey = 'adsonbread_uid'
-  let cachedUid = null
+  const tokenLifetimeMs = 24 * 60 * 60 * 1000
+  let cachedToken = null
+  let tokenPromise = null
 
-  function randomUid() {
+  function randomToken() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
       return window.crypto.randomUUID()
     }
@@ -44,21 +46,33 @@
     return 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12)
   }
 
-  async function userUid() {
-    if (cachedUid) return cachedUid
+  function validToken(value, now = Date.now()) {
+    return value && typeof value === 'object' && typeof value.id === 'string' && value.id &&
+      Number.isFinite(value.expiresAt) && value.expiresAt > now
+  }
+
+  function createToken(now = Date.now()) {
+    return { expiresAt: now + tokenLifetimeMs, id: randomToken() }
+  }
+
+  async function loadToken() {
+    const now = Date.now()
+
+    if (validToken(cachedToken, now)) return cachedToken.id
 
     try {
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         const stored = await chrome.storage.local.get(uidStorageKey)
+        const value = stored && stored[uidStorageKey]
 
-        if (stored && typeof stored[uidStorageKey] === 'string' && stored[uidStorageKey]) {
-          cachedUid = stored[uidStorageKey]
-          return cachedUid
+        if (validToken(value, now)) {
+          cachedToken = value
+          return cachedToken.id
         }
 
-        cachedUid = randomUid()
-        await chrome.storage.local.set({ [uidStorageKey]: cachedUid })
-        return cachedUid
+        cachedToken = createToken(now)
+        await chrome.storage.local.set({ [uidStorageKey]: cachedToken })
+        return cachedToken.id
       }
     } catch {
       // chrome.storage unavailable in this context, fall back to localStorage
@@ -66,19 +80,40 @@
 
     try {
       const stored = window.localStorage.getItem(uidStorageKey)
+      let value = null
 
       if (stored) {
-        cachedUid = stored
-        return cachedUid
+        try {
+          value = JSON.parse(stored)
+        } catch {
+          // SDK 1.0.0 stored a bare string. Replace it instead of carrying the
+          // permanent identifier into the rotating-token design.
+        }
       }
 
-      cachedUid = randomUid()
-      window.localStorage.setItem(uidStorageKey, cachedUid)
-      return cachedUid
+      if (validToken(value, now)) {
+        cachedToken = value
+        return cachedToken.id
+      }
+
+      cachedToken = createToken(now)
+      window.localStorage.setItem(uidStorageKey, JSON.stringify(cachedToken))
+      return cachedToken.id
     } catch {
-      cachedUid = randomUid()
-      return cachedUid
+      cachedToken = createToken(now)
+      return cachedToken.id
     }
+  }
+
+  async function userToken() {
+    if (validToken(cachedToken)) return cachedToken.id
+    if (tokenPromise) return tokenPromise
+
+    tokenPromise = loadToken().finally(() => {
+      tokenPromise = null
+    })
+
+    return tokenPromise
   }
 
   function browserLanguage() {
@@ -174,7 +209,8 @@
           api_key: apiKey,
           language: languageFromOptions(options || {}),
           placement: formatFromPlacement(placement),
-          uid: await userUid(),
+          sdk_version: VERSION,
+          token: await userToken(),
         }),
         headers: { 'content-type': 'application/json' },
         method: 'POST',

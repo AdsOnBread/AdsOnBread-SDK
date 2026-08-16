@@ -5,7 +5,7 @@
   "description": "Minimal React example for the AdsOnBread SDK.",
   "type": "module",
   "dependencies": {
-    "@adsonbread/react": "^1.0.0",
+    "@adsonbread/react": "^1.1.0",
     "react": "^19.0.0"
   }
 }

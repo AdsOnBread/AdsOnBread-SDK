@@ -22,9 +22,9 @@ Manifest V3 extension pages must load JavaScript from the packaged extension, no
 ```sh
 mkdir -p src/vendor
 curl -L -o src/vendor/adsonbread-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.0.0/sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.1.0/sdk.js
 curl -L -o src/vendor/adsonbread-test-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.0.0/test-sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.1.0/test-sdk.js
 ```
 
 To update, bump the tag in the URL and re-run it. Tag refs are immutable, so a given tag always serves the same bytes.
@@ -45,7 +45,7 @@ Every release here is published straight to npm, so `npm update @adsonbread/reac
 You can install from this repo directly if you would rather track a tag:
 
 ```sh
-npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.0.0 --allow-git=all
+npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.1.0 --allow-git=all
 ```
 
 Two caveats, which is why the registry install above is the recommended path:
@@ -54,7 +54,7 @@ Two caveats, which is why the registry install above is the recommended path:
 - npm's canonical `resolved` URL for hosted specs is `git+ssh://`, which fails on CI runners with no SSH key. Use the explicit HTTPS form there:
 
 ```sh
-npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.0.0" --allow-git=all
+npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.1.0" --allow-git=all
 ```
 
 The `#semver:` range means `npm update` re-resolves against new tags, while your lockfile pins the exact commit until you ask for a newer one.
@@ -142,9 +142,19 @@ export function MockAdSlot() {
 
 See [`examples/react-extension`](examples/react-extension).
 
-## Frequency capping and the stored user ID
+## Frequency capping and the short-lived token
 
-The SDK generates a random, anonymous identifier per install (a UUID, not derived from any user data) and stores it under the `adsonbread_uid` key in `chrome.storage.local`, falling back to `localStorage`. It is sent with each ad request so AdsOnBread can frequency-cap delivery per user: repeat requests within a minute return the same ad, and impressions beyond the per-user cap stop counting toward billing. Disclose this identifier in your extension's privacy policy. If your manifest does not include the `storage` permission, the SDK automatically uses `localStorage` instead.
+The SDK generates a random pseudonymous token and stores `{ id, expiresAt }` under the `adsonbread_uid` key in `chrome.storage.local`, falling back to `localStorage`. The SDK never sends the token after its 24-hour expiration and replaces it before the next ad request. Browser storage has no automatic TTL, so if the extension does not run again, an expired record can remain until the next SDK use, storage clearing, or uninstall. If neither storage API is available, the token lasts only in memory for the current page. SDK 1.1.0 replaces the permanent bare string written by SDK 1.0.0 on first use.
+
+The token is sent with each ad request so AdsOnBread can frequency-cap delivery: repeat requests within a minute return the same ad, and impressions beyond the eight-hour per-token cap stop counting toward billing. AdsOnBread converts the submitted token to a keyed HMAC before storage and scrubs that value after 24 hours. It is not used for behavioral advertising or cross-site profiling. If your manifest does not include the `storage` permission, the SDK automatically uses `localStorage` instead.
+
+### Required publisher disclosure
+
+Include equivalent language in your extension privacy policy and Chrome/Edge store privacy fields:
+
+> This extension uses AdsOnBread to display contextual ads. The SDK stores a random pseudonymous token and a 24-hour expiration time in local extension storage and transmits the unexpired token, browser language, impressions, and clicks to AdsOnBread for frequency capping, billing accuracy, and fraud prevention. An expired storage record is replaced the next time the SDK runs and can also be removed by clearing extension storage or uninstalling. AdsOnBread also derives coarse country from the network request. This information is not used for behavioral advertising or cross-site profiling.
+
+See the [AdsOnBread privacy policy](https://adsonbread.com/privacy) for the server-side retention schedule.
 
 ## Chrome extension CSP
 

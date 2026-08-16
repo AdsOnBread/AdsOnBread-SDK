@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Replaced the permanent per-install identifier with a random token that is never reused after its 24-hour expiration. An expired browser-storage record is replaced on the next SDK use.
+- Migrates the bare `adsonbread_uid` string written by 1.0.0 to `{ id, expiresAt }` on first use.
+- Sends `token` and `sdk_version` instead of `uid` with live ad requests.
+- Documents the SDK storage, frequency-capping purpose, retention behavior, and required publisher disclosure.
+
 ## 1.0.0
 
 Moved the SDK out of the AdsOnBread platform repo into this standalone public repo. **No API changes** — `AdsOnBread.load`, `AdsOnBreadTest.load`, and `<AdsOnBreadSlot />` behave exactly as they did in `@adsonbread/react@0.4.0`.
