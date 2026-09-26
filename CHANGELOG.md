@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Count an ad only after more than 70% of its surface remains visible in the active view for at least one continuous second.
+- Send a one-time confirmation to the edge Worker for billing; ads delivered but never confirmed do not create impressions or earnings.
+- Measure the rendered ad element in both the vanilla and React SDKs. The test SDK remains offline and does not count impressions.
+- Required for live ad delivery after October 22, 2026, Mountain Daylight Time.
+
 ## 1.1.0
 
 - Replaced the permanent per-install identifier with a random token that is never reused after its 24-hour expiration. An expired browser-storage record is replaced on the next SDK use.

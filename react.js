@@ -1,6 +1,7 @@
 import { createElement, useEffect, useRef, useState } from 'react'
+import { observeView } from './viewability.js'
 
-export const VERSION = '1.1.0'
+export const VERSION = '1.2.0'
 
 const DEFAULT_EDGE_URL = 'https://edge.adsonbread.com'
 
@@ -13,6 +14,7 @@ function normalizeAd(ad) {
 
   return {
     clickUrl: ad.click_url || ad.clickUrl || '',
+    impressionId: ad.impression_id || ad.impressionId || '',
     extensionName: ad.extension_name || ad.extensionName || 'this extension',
     format: ad.format === 'card' ? 'card' : 'banner',
     iconUrl: ad.icon_url || ad.iconUrl || '',
@@ -147,13 +149,14 @@ function resolveLanguage(language) {
 }
 
 async function requestAd({ apiKey, placement, edgeUrl, language, signal }) {
+  const token = await userToken()
   const response = await fetch(edgeUrl + '/ad', {
     body: JSON.stringify({
       api_key: apiKey,
       language: resolveLanguage(language),
       placement: formatFromPlacement(placement),
       sdk_version: VERSION,
-      token: await userToken(),
+      token,
     }),
     headers: { 'content-type': 'application/json' },
     method: 'POST',
@@ -163,7 +166,7 @@ async function requestAd({ apiKey, placement, edgeUrl, language, signal }) {
   if (!response.ok) return null
 
   const result = await response.json()
-  return normalizeAd(result.ad)
+  return { ad: normalizeAd(result.ad), token }
 }
 
 function shortKey(apiKey) {
@@ -233,7 +236,9 @@ export function AdsOnBreadSlot({
 }) {
   const [ad, setAd] = useState(test ? testAd(apiKey, placement) : null)
   const [status, setStatus] = useState(test ? 'ready' : 'loading')
+  const [viewToken, setViewToken] = useState(null)
   const latestLoad = useRef(0)
+  const viewElement = useRef(null)
 
   useEffect(() => {
     const loadId = latestLoad.current + 1
@@ -242,6 +247,7 @@ export function AdsOnBreadSlot({
     if (test) {
       const mock = testAd(apiKey, placement)
       setAd(mock)
+      setViewToken(null)
       setStatus('ready')
       if (onAdLoad) onAdLoad(mock)
       return undefined
@@ -249,6 +255,7 @@ export function AdsOnBreadSlot({
 
     if (!apiKey) {
       setAd(null)
+      setViewToken(null)
       setStatus('empty')
       return undefined
     }
@@ -258,15 +265,18 @@ export function AdsOnBreadSlot({
 
     setStatus('loading')
     requestAd({ apiKey, edgeUrl, language, placement, signal: ctrl.signal })
-      .then((nextAd) => {
+      .then((result) => {
         if (latestLoad.current !== loadId) return
+        const nextAd = result && result.ad
         setAd(nextAd)
+        setViewToken(result && result.token)
         setStatus(nextAd ? 'ready' : 'empty')
         if (nextAd && onAdLoad) onAdLoad(nextAd)
       })
       .catch((error) => {
         if (latestLoad.current !== loadId) return
         setAd(null)
+        setViewToken(null)
         setStatus('error')
         if (onError) onError(error)
       })
@@ -277,6 +287,11 @@ export function AdsOnBreadSlot({
       ctrl.abort()
     }
   }, [apiKey, edgeUrl, language, onAdLoad, onError, placement, test])
+
+  useEffect(() => {
+    if (!ad || test || !ad.impressionId || !viewToken || !viewElement.current) return undefined
+    return observeView(viewElement.current, ad, apiKey, edgeUrl, viewToken, VERSION)
+  }, [ad, apiKey, edgeUrl, test, viewToken])
 
   if (!ad) return fallback
 
@@ -298,6 +313,7 @@ export function AdsOnBreadSlot({
     {
       'data-adsonbread': 'true',
       'data-adsonbread-status': status,
+      ref: viewElement,
       className: 'adsonbread-slot',
       style: {
         display: 'inline-flex',

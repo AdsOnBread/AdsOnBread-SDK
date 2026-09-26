@@ -22,9 +22,9 @@ Manifest V3 extension pages must load JavaScript from the packaged extension, no
 ```sh
 mkdir -p src/vendor
 curl -L -o src/vendor/adsonbread-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.1.0/sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.2.0/sdk.js
 curl -L -o src/vendor/adsonbread-test-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.1.0/test-sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.2.0/test-sdk.js
 ```
 
 To update, bump the tag in the URL and re-run it. Tag refs are immutable, so a given tag always serves the same bytes.
@@ -45,7 +45,7 @@ Every release here is published straight to npm, so `npm update @adsonbread/reac
 You can install from this repo directly if you would rather track a tag:
 
 ```sh
-npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.1.0 --allow-git=all
+npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.2.0 --allow-git=all
 ```
 
 Two caveats, which is why the registry install above is the recommended path:
@@ -54,7 +54,7 @@ Two caveats, which is why the registry install above is the recommended path:
 - npm's canonical `resolved` URL for hosted specs is `git+ssh://`, which fails on CI runners with no SSH key. Use the explicit HTTPS form there:
 
 ```sh
-npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.1.0" --allow-git=all
+npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.2.0" --allow-git=all
 ```
 
 The `#semver:` range means `npm update` re-resolves against new tags, while your lockfile pins the exact commit until you ask for a newer one.
@@ -109,6 +109,8 @@ Card:
 ```
 
 The production SDK calls `https://edge.adsonbread.com/ad`, renders a live campaign when one is available, and returns the ad object from `AdsOnBread.load(...)` (or `null` when no ad is available).
+
+Version 1.2.0 confirms an impression only after more than 70% of the rendered ad surface remains visible in the active view for at least one continuous second. Ads that never meet this threshold do not count toward advertiser billing or developer earnings. Keep the SDK's visibility measurement intact. Add `https://edge.adsonbread.com` to your extension's `connect-src` CSP so both `/ad` and `/view` can be reached. All live extensions must use 1.2.0 or later by October 22, 2026 at 11:59 p.m. Mountain Daylight Time; older SDKs stop receiving ads at midnight on October 23.
 
 A runnable example extension is in [`examples/vanilla-extension`](examples/vanilla-extension).
 

@@ -123,7 +123,7 @@ test('react.js exports AdsOnBreadSlot', async () => {
 })
 
 test('package.json ships every file publishers install', () => {
-  for (const file of ['sdk.js', 'test-sdk.js', 'react.js', 'react.d.ts']) {
+  for (const file of ['sdk.js', 'test-sdk.js', 'react.js', 'react.d.ts', 'viewability.js']) {
     assert.ok(pkg.files.includes(file), `package.json "files" is missing ${file}`)
   }
 })
@@ -132,7 +132,8 @@ test('both live SDK entry points transmit token and sdk_version, never uid', asy
   for (const file of ['sdk.js', 'react.js']) {
     const source = await readFile(new URL(file, root), 'utf8')
     assert.match(source, /sdk_version:\s*VERSION/)
-    assert.match(source, /token:\s*await userToken\(\)/)
+    assert.match(source, /const token = await userToken\(\)/)
+    assert.match(source, /\btoken\s*,/)
     assert.doesNotMatch(source, /\buid\s*:/)
   }
 })

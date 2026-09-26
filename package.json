@@ -1,6 +1,6 @@
 {
   "name": "@adsonbread/react",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "AdsOnBread SDK for browser extensions — vanilla JS and React ad slots.",
   "license": "MIT",
   "homepage": "https://adsonbread.com",
@@ -37,11 +37,12 @@
     "sdk.js",
     "test-sdk.js",
     "react.js",
+    "viewability.js",
     "react.d.ts",
     "CHANGELOG.md"
   ],
   "scripts": {
-    "check": "node --check sdk.js && node --check test-sdk.js && node --check react.js",
+    "check": "node --check sdk.js && node --check test-sdk.js && node --check react.js && node --check viewability.js",
     "test": "node --test test/*.test.mjs",
     "example:vanilla": "mkdir -p examples/vanilla-extension/vendor && cp sdk.js examples/vanilla-extension/vendor/adsonbread-sdk.js && cp test-sdk.js examples/vanilla-extension/vendor/adsonbread-test-sdk.js"
   },
