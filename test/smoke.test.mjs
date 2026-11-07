@@ -148,7 +148,7 @@ test('sdk creates a 24-hour token and sends the new request shape', async () => 
   assert.ok(stored.expiresAt > Date.now() + 23 * 60 * 60 * 1000)
   assert.deepEqual(harness.requests[0], {
     api_key: 'key',
-    language: 'en',
+    language: 'en-US',
     placement: 'banner',
     sdk_version: pkg.version,
     token: 'test-uuid',
@@ -224,3 +224,29 @@ function elementStub() {
     innerHTML: '',
   }
 }
+
+test('vanilla and React preserve actual locales and never invent English', async () => {
+  for (const file of ['sdk.js', 'react.js']) {
+    for (const [browserLocale, explicit, expected] of [
+      [undefined, undefined, ''], [null, 'auto', ''], ['', undefined, ''],
+      ['es-MX', undefined, 'es-MX'], ['pt_BR', 'auto', 'pt_BR'],
+      ['zh', undefined, 'zh'], ['zh-Hant-CN', undefined, 'zh-Hant-CN'],
+      ['en-US', 'es', 'es'], [undefined, 'de-DE', 'de-DE'],
+    ]) {
+      const harness = browserContext()
+      harness.context.navigator.language = browserLocale
+      const source = await readFile(new URL(file, root), 'utf8')
+      if (file === 'sdk.js') {
+        runInContext(source, harness.context)
+        await harness.window.AdsOnBread.load('key', 'banner', elementStub(), { language: explicit })
+      } else {
+        // Exercise React's actual request builder without mounting a component.
+        runInContext(source.replace(/^import .*$/gm, '').replace(/^export /gm, '') +
+          '\nwindow.requestAdForTest = requestAd', harness.context)
+        await harness.window.requestAdForTest({ apiKey: 'key', placement: 'banner',
+          edgeUrl: 'https://edge.example', language: explicit })
+      }
+      assert.equal(harness.requests[0].language, expected, `${file}: ${browserLocale}, ${explicit}`)
+    }
+  }
+})

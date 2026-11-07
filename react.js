@@ -1,7 +1,7 @@
 import { createElement, useEffect, useRef, useState } from 'react'
 import { observeView } from './viewability.js'
 
-export const VERSION = '1.2.0'
+export const VERSION = '1.3.0'
 
 const DEFAULT_EDGE_URL = 'https://edge.adsonbread.com'
 
@@ -43,17 +43,10 @@ function normalizeRanges(text, ranges) {
 }
 
 function browserLanguage() {
-  const language = (navigator.language || 'en').toLowerCase()
-
-  if (language.indexOf('zh') === 0) {
-    if (language.includes('tw') || language.includes('hk') || language.includes('mo') || language.includes('hant')) {
-      return 'zh-hant'
-    }
-
-    return 'zh-hans'
-  }
-
-  return language.split('-')[0]
+  // Send the actual locale; only the server normalizes it for targeting.
+  // Unknown stays unknown, never an assumed English preference.
+  return typeof navigator !== 'undefined' && typeof navigator.language === 'string'
+    ? navigator.language.trim() : ''
 }
 
 const UID_STORAGE_KEY = 'adsonbread_uid'
@@ -140,7 +133,7 @@ async function userToken() {
 }
 
 // A manually passed Chrome i18n locale code wins (e.g. 'es', 'pt_BR'); otherwise
-// detect from the browser, which falls back to English when unavailable.
+// detect from the browser, leaving unavailable languages empty.
 function resolveLanguage(language) {
   const value = typeof language === 'string' ? language.trim() : ''
 

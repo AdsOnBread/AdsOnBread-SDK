@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 — 2026-11-07
+
+- Preserve the actual browser locale in vanilla and React requests; missing browser language no longer defaults to English.
+- Document strict language matching for campaigns and cross-promotion, including no impressions or charges for unmatched requests.
+
 ## 1.2.0
 
 - Count an ad only after more than 70% of its surface remains visible in the active view for at least one continuous second.

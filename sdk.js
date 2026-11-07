@@ -1,7 +1,7 @@
 ;(function (window) {
   'use strict'
 
-  const VERSION = '1.2.0'
+  const VERSION = '1.3.0'
   const defaultEdgeUrl = 'https://edge.adsonbread.com'
   const themes = {
     dark: {
@@ -117,22 +117,15 @@
   }
 
   function browserLanguage() {
-    const language = (navigator.language || 'en').toLowerCase()
-
-    if (language.indexOf('zh') === 0) {
-      if (language.includes('tw') || language.includes('hk') || language.includes('mo') || language.includes('hant')) {
-        return 'zh-hant'
-      }
-
-      return 'zh-hans'
-    }
-
-    return language.split('-')[0]
+    // Send the actual locale; only the server normalizes it for targeting.
+    // Unknown stays unknown, never an assumed English preference.
+    return typeof navigator !== 'undefined' && typeof navigator.language === 'string'
+      ? navigator.language.trim() : ''
   }
 
   // Resolve the ad language: a manually passed Chrome i18n locale code wins
   // (e.g. 'es', 'pt_BR', 'zh_CN'); otherwise detect from the browser, which
-  // itself falls back to English when the browser locale is unavailable.
+  // sends an empty language when the browser locale is unavailable.
   function languageFromOptions(options) {
     const value = options && typeof options.language === 'string' ? options.language.trim() : ''
 

@@ -22,9 +22,9 @@ Manifest V3 extension pages must load JavaScript from the packaged extension, no
 ```sh
 mkdir -p src/vendor
 curl -L -o src/vendor/adsonbread-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.2.0/sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.3.0/sdk.js
 curl -L -o src/vendor/adsonbread-test-sdk.js \
-  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.2.0/test-sdk.js
+  https://raw.githubusercontent.com/AdsOnBread/AdsOnBread-SDK/v1.3.0/test-sdk.js
 ```
 
 To update, bump the tag in the URL and re-run it. Tag refs are immutable, so a given tag always serves the same bytes.
@@ -45,7 +45,7 @@ Every release here is published straight to npm, so `npm update @adsonbread/reac
 You can install from this repo directly if you would rather track a tag:
 
 ```sh
-npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.2.0 --allow-git=all
+npm install github:AdsOnBread/AdsOnBread-SDK#semver:^1.3.0 --allow-git=all
 ```
 
 Two caveats, which is why the registry install above is the recommended path:
@@ -54,7 +54,7 @@ Two caveats, which is why the registry install above is the recommended path:
 - npm's canonical `resolved` URL for hosted specs is `git+ssh://`, which fails on CI runners with no SSH key. Use the explicit HTTPS form there:
 
 ```sh
-npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.2.0" --allow-git=all
+npm install "git+https://github.com/AdsOnBread/AdsOnBread-SDK.git#semver:^1.3.0" --allow-git=all
 ```
 
 The `#semver:` range means `npm update` re-resolves against new tags, while your lockfile pins the exact commit until you ask for a newer one.
@@ -154,7 +154,7 @@ One approved extension has one base key. Choose the distribution when bundling:
 | Edge | `edge-YOUR_KEY` |
 | Firefox | `firefox-YOUR_KEY` |
 
-Pass the complete key to either `AdsOnBread.load()` or `AdsOnBreadSlot`. SDK 1.2.0 forwards it unchanged on ad requests and view confirmations; no runtime update is needed. Prefixes label the publisher's distribution, not proof of a browser or store listing. All variants share approval, placements, rate limits, frequency caps, pricing and one payout balance. Regenerating the base key revokes every variant. Developer and admin reports can show all browsers or one browser; pre-rollout history is Chrome.
+Pass the complete key to either `AdsOnBread.load()` or `AdsOnBreadSlot`. SDK 1.3.0 forwards it unchanged on ad requests and view confirmations; no runtime update is needed. Prefixes label the publisher's distribution, not proof of a browser or store listing. All variants share approval, placements, rate limits, frequency caps, pricing and one payout balance. Regenerating the base key revokes every variant. Developer and admin reports can show all browsers or one browser; pre-rollout history is Chrome.
 
 Edge and Firefox are enabled automatically when selected in your approved extension application, including existing approved applications. Otherwise, enable them in the browser settings on your extension setup page. Chrome remains available. Edge requests and pending view confirmations are blocked when Edge is disabled. The developer dashboard browser dropdown shows only browsers enabled on at least one of your extensions, plus All browsers.
 
@@ -187,7 +187,7 @@ function Ad({ adsConsent }) {
 }
 ```
 
-On withdrawal, stop future calls/refreshes and remove the vanilla ad container or unmount the React component. Remove any stored `adsonbread_uid` token from extension storage and localStorage if your consent policy requires it. Already sent requests cannot be recalled. SDK 1.2.0 has no public vanilla cancellation/destroy API: a pending load may still finish, and a started view-confirmation request or retry may still run. React unmount aborts the ad fetch and disconnects visibility measurement but does not guarantee cancellation of a confirmation already started. If your policy requires immediate cessation of every SDK operation, close the isolated extension document hosting the SDK on withdrawal; do not describe DOM removal alone as guaranteed network cancellation.
+On withdrawal, stop future calls/refreshes and remove the vanilla ad container or unmount the React component. Remove any stored `adsonbread_uid` token from extension storage and localStorage if your consent policy requires it. Already sent requests cannot be recalled. SDK 1.3.0 has no public vanilla cancellation/destroy API: a pending load may still finish, and a started view-confirmation request or retry may still run. React unmount aborts the ad fetch and disconnects visibility measurement but does not guarantee cancellation of a confirmation already started. If your policy requires immediate cessation of every SDK operation, close the isolated extension document hosting the SDK on withdrawal; do not describe DOM removal alone as guaranteed network cancellation.
 
 ## Frequency capping and the short-lived token
 
@@ -219,7 +219,7 @@ The SDK is vendored or bundled, so scripts only need `'self'`. Live ad requests 
 
 Pass any [Chrome i18n locale code](https://developer.chrome.com/docs/extensions/reference/api/i18n) — regional codes are normalized before matching, so `en-US` becomes `en`, `pt_BR` becomes `pt`, `zh_CN` becomes `zh-hans`, and `zh_TW`, `zh_HK`, and `zh_MO` become `zh-hant`.
 
-`en`, `es`, `fr`, `de`, `pt`, `it`, `ja`, `hi`, `zh-hans`, `zh-hant`. When no creative exists for the requested language, an English creative is served instead.
+`en`, `es`, `fr`, `de`, `pt`, `it`, `ja`, `hi`, `zh-hans`, `zh-hant`. Paid campaigns and cross-promotion only serve a creative matching the reported language. Unknown or unsupported languages and missing translations return no ad and create no impression or charge. There is no English fallback. For Chinese, supply a script or recognized region (for example `zh-Hans`, `zh-Hant`, `zh-CN`, or `zh-TW`); bare `zh` is ambiguous and returns no ad.
 
 ## API
 
